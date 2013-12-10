@@ -1,4 +1,4 @@
-common-package
+RAML Scala Parser
 ==============
 
-Test common package repo
+Its fork of https://github.com/raml-org/raml-java-parser
