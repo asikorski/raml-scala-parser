@@ -17,6 +17,7 @@ package org.raml.parser.visitor;
 
 import static org.raml.parser.rule.BaseUriRule.URI_PATTERN;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Stack;
 import java.util.regex.Matcher;

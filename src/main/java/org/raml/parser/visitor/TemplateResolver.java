@@ -107,9 +107,11 @@ public class TemplateResolver
                 continue; //invalid key
             }
             String key = ((ScalarNode) keyNode).getValue();
+            
             if (key.equals("resourceTypes") || key.equals("traits"))
             {
                 Node templateSequence = rootTuple.getValueNode();
+                
                 if (templateSequence.getNodeId() == scalar)
                 {
                     if (!templateSequence.getTag().equals(INCLUDE_TAG))
@@ -140,6 +142,7 @@ public class TemplateResolver
         for (int j = 0; j < templateSequence.getValue().size(); j++)
         {
             Node template = templateSequence.getValue().get(j);
+            
             if (template.getNodeId() == scalar)
             {
                 if (!template.getTag().equals(INCLUDE_TAG))
@@ -164,11 +167,12 @@ public class TemplateResolver
                 }
                 if (templateType.equals("resourceTypes"))
                 {
+                	
                     resourceTypesMap.put(templateKey, (MappingNode) templateValue);
                 }
                 if (templateType.equals("traits"))
                 {
-                    traitsMap.put(templateKey, (MappingNode) templateValue);
+                	traitsMap.put(templateKey, (MappingNode) templateValue);
                 }
                 prunedTemplates.add(getFakeTemplateNode(tuple.getKeyNode()));
             }
@@ -312,11 +316,13 @@ public class TemplateResolver
                     return false;
                 }
 
+                
                 //update global action map
                 for (Map.Entry<String, Node> entry : actionNodes.entrySet())
                 {
                     if (!globalActionNodes.containsKey(entry.getKey()))
                     {
+                    	
                         globalActionNodes.put(entry.getKey(), entry.getValue());
                     }
                 }
@@ -423,6 +429,8 @@ public class TemplateResolver
         private MappingNode cloneTemplate(Node reference, TemplateType type)
         {
             String templateName = getTemplateName(reference);
+
+            
             Map<String, MappingNode> templateMap;
 
             Map<String, String> defaultParameters = new HashMap<String, String>();
@@ -441,7 +449,6 @@ public class TemplateResolver
                 label = "trait";
                 defaultParameters.put("methodName", currentAction);
             }
-
             MappingNode templateNode = templateMap.get(templateName);
             if (templateNode == null)
             {

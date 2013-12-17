@@ -19,6 +19,9 @@ import static org.raml.parser.rule.ValidationMessage.NON_SCALAR_KEY_MESSAGE;
 import static org.raml.parser.visitor.TupleType.KEY;
 import static org.raml.parser.visitor.TupleType.VALUE;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,6 +35,8 @@ import org.raml.parser.builder.DefaultTupleBuilder;
 import org.raml.parser.builder.NodeBuilder;
 import org.raml.parser.builder.SequenceBuilder;
 import org.raml.parser.builder.TupleBuilder;
+import org.raml.parser.loader.CompositeResourceLoader;
+import org.raml.parser.loader.FileResourceLoader;
 import org.raml.parser.loader.ResourceLoader;
 import org.raml.parser.resolver.DefaultTupleHandler;
 import org.raml.parser.tagresolver.IncludeResolver;
@@ -49,260 +54,238 @@ import org.yaml.snakeyaml.nodes.Tag;
 import org.yaml.snakeyaml.resolver.Resolver;
 import org.yaml.snakeyaml.serializer.Serializer;
 
-public class YamlDocumentBuilder<T> implements NodeHandler
-{
+public class YamlDocumentBuilder<T> implements NodeHandler {
 
-    private Class<T> documentClass;
-    private T documentObject;
-    private Stack<NodeBuilder<?>> builderContext = new Stack<NodeBuilder<?>>();
-    private Stack<Object> documentContext = new Stack<Object>();
-    private MappingNode rootNode;
-    private ResourceLoader resourceLoader;
-    private TagResolver[] tagResolvers;
+	private Class<T> documentClass;
+	private T documentObject;
+	private Stack<NodeBuilder<?>> builderContext = new Stack<NodeBuilder<?>>();
+	private Stack<Object> documentContext = new Stack<Object>();
+	private MappingNode rootNode;
+	private ResourceLoader resourceLoader;
+	private TagResolver[] tagResolvers;
 
-    public YamlDocumentBuilder(Class<T> documentClass, ResourceLoader resourceLoader, TagResolver... tagResolvers)
-    {
-        this.documentClass = documentClass;
-        this.resourceLoader = resourceLoader;
-        this.tagResolvers = tagResolvers;
-    }
+	public YamlDocumentBuilder(Class<T> documentClass,
+			ResourceLoader resourceLoader, TagResolver... tagResolvers) {
+		this.documentClass = documentClass;
+		this.resourceLoader = resourceLoader;
+		this.tagResolvers = tagResolvers;
+	}
 
-    public T build(Reader content)
-    {
-        Yaml yamlParser = new Yaml();
-        NodeVisitor nodeVisitor = new NodeVisitor(this, resourceLoader, tagResolvers);
-        rootNode = (MappingNode) yamlParser.compose(content);
-        preBuildProcess();
-        nodeVisitor.visitDocument(rootNode);
-        postBuildProcess();
-        return documentObject;
-    }
+	public T build(Reader content) {
+		Yaml yamlParser = new Yaml();
+		NodeVisitor nodeVisitor = new NodeVisitor(this, resourceLoader,
+				tagResolvers);
+		rootNode = (MappingNode) yamlParser.compose(content);
+		preBuildProcess();
+		nodeVisitor.visitDocument(rootNode);
+		postBuildProcess();
+		return documentObject;
+	}
 
-    protected T getDocumentObject()
-    {
-        return documentObject;
-    }
+	protected T getDocumentObject() {
+		return documentObject;
+	}
 
-    protected Stack<NodeBuilder<?>> getBuilderContext()
-    {
-        return builderContext;
-    }
+	protected Stack<NodeBuilder<?>> getBuilderContext() {
+		return builderContext;
+	}
 
-    protected Stack<Object> getDocumentContext()
-    {
-        return documentContext;
-    }
+	protected Stack<Object> getDocumentContext() {
+		return documentContext;
+	}
 
-    protected ResourceLoader getResourceLoader()
-    {
-        return resourceLoader;
-    }
+	protected ResourceLoader getResourceLoader() {
+		return resourceLoader;
+	}
 
-    protected void preBuildProcess()
-    {
-    }
+	protected void preBuildProcess() {
+	}
 
-    protected void postBuildProcess()
-    {
-    }
+	protected void postBuildProcess() {
+	}
 
-    public T build(InputStream content)
-    {
-        return build(new InputStreamReader(content));
-    }
+	public T build(InputStream content) {
+		return build(new InputStreamReader(content));
+	}
 
-    public T build(String content)
-    {
-        return build(new StringReader(content));
-    }
+	public T build(String content) {
+		return build(new StringReader(content));
+	}
+	
+	public T build(File path) {
+		this.resourceLoader = new CompositeResourceLoader(new FileResourceLoader(path.getParent()), this.resourceLoader );
+		FileReader reader = null;
+		try {
+			reader = new FileReader(path);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		return build(reader);
+	}
 
-    public MappingNode getRootNode()
-    {
-        return rootNode;
-    }
+	public MappingNode getRootNode() {
+		return rootNode;
+	}
 
-    @Override
-    public void onMappingNodeStart(MappingNode mappingNode, TupleType tupleType)
-    {
-        if (tupleType == KEY)
-        {
-            throw new YAMLException(NON_SCALAR_KEY_MESSAGE + ": " + mappingNode.getStartMark());
-        }
-        NodeBuilder<?> currentBuilder = builderContext.peek();
-        Object parentObject = documentContext.peek();
-        Object object = ((TupleBuilder<?, MappingNode>) currentBuilder).buildValue(parentObject, mappingNode);
-        documentContext.push(object);
+	@Override
+	public void onMappingNodeStart(MappingNode mappingNode, TupleType tupleType) {
+		if (tupleType == KEY) {
+			throw new YAMLException(NON_SCALAR_KEY_MESSAGE + ": "
+					+ mappingNode.getStartMark());
+		}
+		NodeBuilder<?> currentBuilder = builderContext.peek();
+		Object parentObject = documentContext.peek();
+		Object object = ((TupleBuilder<?, MappingNode>) currentBuilder)
+				.buildValue(parentObject, mappingNode);
+		documentContext.push(object);
 
-    }
+	}
 
-    @Override
-    public void onMappingNodeEnd(MappingNode mappingNode, TupleType tupleType)
-    {
-        if (tupleType == KEY)
-        {
-            throw new YAMLException(NON_SCALAR_KEY_MESSAGE + ": " + mappingNode.getStartMark());
-        }
-        documentContext.pop();
-    }
+	@Override
+	public void onMappingNodeEnd(MappingNode mappingNode, TupleType tupleType) {
+		if (tupleType == KEY) {
+			throw new YAMLException(NON_SCALAR_KEY_MESSAGE + ": "
+					+ mappingNode.getStartMark());
+		}
+		documentContext.pop();
+	}
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public void onSequenceStart(SequenceNode node, TupleType tupleType)
-    {
-        if (tupleType == KEY)
-        {
-            throw new YAMLException(NON_SCALAR_KEY_MESSAGE + ": " + node.getStartMark());
-        }
-        SequenceBuilder currentBuilder = (SequenceBuilder) builderContext.peek();
-        Object parentObject = documentContext.peek();
-        Object object = ((NodeBuilder) currentBuilder).buildValue(parentObject, node);
-        builderContext.push(currentBuilder.getItemBuilder());
-        documentContext.push(object);
-    }
+	@Override
+	@SuppressWarnings("unchecked")
+	public void onSequenceStart(SequenceNode node, TupleType tupleType) {
+		if (tupleType == KEY) {
+			throw new YAMLException(NON_SCALAR_KEY_MESSAGE + ": "
+					+ node.getStartMark());
+		}
+		SequenceBuilder currentBuilder = (SequenceBuilder) builderContext
+				.peek();
+		Object parentObject = documentContext.peek();
+		Object object = ((NodeBuilder) currentBuilder).buildValue(parentObject,
+				node);
+		builderContext.push(currentBuilder.getItemBuilder());
+		documentContext.push(object);
+	}
 
-    @Override
-    public void onSequenceEnd(SequenceNode node, TupleType tupleType)
-    {
-        if (tupleType == KEY)
-        {
-            throw new YAMLException(NON_SCALAR_KEY_MESSAGE + ": " + node.getStartMark());
-        }
-        documentContext.pop();
-        builderContext.pop();
-    }
+	@Override
+	public void onSequenceEnd(SequenceNode node, TupleType tupleType) {
+		if (tupleType == KEY) {
+			throw new YAMLException(NON_SCALAR_KEY_MESSAGE + ": "
+					+ node.getStartMark());
+		}
+		documentContext.pop();
+		builderContext.pop();
+	}
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public void onScalar(ScalarNode node, TupleType tupleType)
-    {
+	@Override
+	@SuppressWarnings("unchecked")
+	public void onScalar(ScalarNode node, TupleType tupleType) {
 
-        NodeBuilder<?> currentBuilder = builderContext.peek();
-        Object parentObject = documentContext.peek();
+		NodeBuilder<?> currentBuilder = builderContext.peek();
+		Object parentObject = documentContext.peek();
 
-        if (tupleType == VALUE)
-        {
-            ((NodeBuilder<ScalarNode>) currentBuilder).buildValue(parentObject, node);
-        }
-        else
-        {
-            ((TupleBuilder<ScalarNode, ?>) currentBuilder).buildKey(parentObject, node);
-        }
+		if (tupleType == VALUE) {
+			((NodeBuilder<ScalarNode>) currentBuilder).buildValue(parentObject,
+					node);
+		} else {
+			((TupleBuilder<ScalarNode, ?>) currentBuilder).buildKey(
+					parentObject, node);
+		}
 
-    }
+	}
 
+	@Override
+	public void onDocumentStart(MappingNode node) {
+		try {
+			documentObject = documentClass.newInstance();
+			documentContext.push(documentObject);
+			builderContext.push(buildDocumentBuilder());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    @Override
-    public void onDocumentStart(MappingNode node)
-    {
-        try
-        {
-            documentObject = documentClass.newInstance();
-            documentContext.push(documentObject);
-            builderContext.push(buildDocumentBuilder());
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
+	private TupleBuilder<?, ?> buildDocumentBuilder() {
+		DefaultTupleBuilder<Node, MappingNode> documentBuilder = new DefaultTupleBuilder<Node, MappingNode>(
+				new DefaultTupleHandler());
+		documentBuilder.addBuildersFor(documentClass);
+		return documentBuilder;
+	}
 
-    private TupleBuilder<?, ?> buildDocumentBuilder()
-    {
-        DefaultTupleBuilder<Node, MappingNode> documentBuilder = new DefaultTupleBuilder<Node, MappingNode>(new DefaultTupleHandler());
-        documentBuilder.addBuildersFor(documentClass);
-        return documentBuilder;
-    }
+	@Override
+	public void onDocumentEnd(MappingNode node) {
+		if (documentObject != documentContext.pop()) {
+			throw new IllegalStateException("more zombies?!");
+		}
+	}
 
+	@Override
+	public void onTupleEnd(NodeTuple nodeTuple) {
+		builderContext.pop();
 
-    @Override
-    public void onDocumentEnd(MappingNode node)
-    {
-        if (documentObject != documentContext.pop())
-        {
-            throw new IllegalStateException("more zombies?!");
-        }
-    }
+	}
 
-    @Override
-    public void onTupleEnd(NodeTuple nodeTuple)
-    {
-        builderContext.pop();
+	@Override
+	public void onTupleStart(NodeTuple nodeTuple) {
 
-    }
+		TupleBuilder<?, ?> currentBuilder = (TupleBuilder<?, ?>) builderContext
+				.peek();
+		if (currentBuilder != null) {
+			NodeBuilder<?> builder = currentBuilder
+					.getBuilderForTuple(nodeTuple);
+			builderContext.push(builder);
+		} else {
+			throw new IllegalStateException("Unexpected builderContext state");
+		}
 
-    @Override
-    public void onTupleStart(NodeTuple nodeTuple)
-    {
+	}
 
-        TupleBuilder<?, ?> currentBuilder = (TupleBuilder<?, ?>) builderContext.peek();
-        if (currentBuilder != null)
-        {
-            NodeBuilder<?> builder = currentBuilder.getBuilderForTuple(nodeTuple);
-            builderContext.push(builder);
-        }
-        else
-        {
-            throw new IllegalStateException("Unexpected builderContext state");
-        }
+	@Override
+	public void onSequenceElementStart(Node sequenceNode) {
+	}
 
-    }
+	@Override
+	public void onSequenceElementEnd(Node sequenceNode) {
+	}
 
-    @Override
-    public void onSequenceElementStart(Node sequenceNode)
-    {
-    }
+	@Override
+	public void onCustomTagStart(Tag tag, Node originalValueNode,
+			NodeTuple nodeTuple) {
+	}
 
-    @Override
-    public void onSequenceElementEnd(Node sequenceNode)
-    {
-    }
+	@Override
+	public void onCustomTagEnd(Tag tag, Node originalValueNode,
+			NodeTuple nodeTuple) {
+	}
 
-    @Override
-    public void onCustomTagStart(Tag tag, Node originalValueNode, NodeTuple nodeTuple)
-    {
-    }
+	@Override
+	public void onCustomTagError(Tag tag, Node node, String message) {
+		if (IncludeResolver.INCLUDE_TAG.equals(tag)) {
+			throw new RuntimeException("resource not found: "
+					+ ((ScalarNode) node).getValue());
+		}
+	}
 
-    @Override
-    public void onCustomTagEnd(Tag tag, Node originalValueNode, NodeTuple nodeTuple)
-    {
-    }
+	public static String dumpFromAst(Node rootNode) {
+		Writer writer = new StringWriter();
+		dumpFromAst(rootNode, writer);
+		return writer.toString();
+	}
 
-    @Override
-    public void onCustomTagError(Tag tag, Node node, String message)
-    {
-        if (IncludeResolver.INCLUDE_TAG.equals(tag))
-        {
-            throw new RuntimeException("resource not found: " + ((ScalarNode) node).getValue());
-        }
-    }
-
-    public static String dumpFromAst(Node rootNode)
-    {
-        Writer writer = new StringWriter();
-        dumpFromAst(rootNode, writer);
-        return writer.toString();
-    }
-
-    public static void dumpFromAst(Node rootNode, Writer output)
-    {
-        if (rootNode == null)
-        {
-            throw new IllegalArgumentException("rootNode is null");
-        }
-        DumperOptions dumperOptions = new DumperOptions();
-        Tag rootTag = dumperOptions.getExplicitRoot();
-        Serializer serializer = new Serializer(new Emitter(output, dumperOptions), new Resolver(),
-                                               dumperOptions, rootTag);
-        try
-        {
-            serializer.open();
-            serializer.serialize(rootNode);
-            serializer.close();
-        }
-        catch (IOException e)
-        {
-            throw new YAMLException(e);
-        }
-    }
+	public static void dumpFromAst(Node rootNode, Writer output) {
+		if (rootNode == null) {
+			throw new IllegalArgumentException("rootNode is null");
+		}
+		DumperOptions dumperOptions = new DumperOptions();
+		Tag rootTag = dumperOptions.getExplicitRoot();
+		Serializer serializer = new Serializer(new Emitter(output,
+				dumperOptions), new Resolver(), dumperOptions, rootTag);
+		try {
+			serializer.open();
+			serializer.serialize(rootNode);
+			serializer.close();
+		} catch (IOException e) {
+			throw new YAMLException(e);
+		}
+	}
 
 }
