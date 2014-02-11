@@ -22,6 +22,7 @@ import static org.raml.parser.utils.ReflectionUtils.isPojo;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -95,6 +96,7 @@ public class RamlEmitter
 
     private void dumpSequenceField(StringBuilder dump, int depth, Field field, Object pojo)
     {
+    	
         if (!List.class.isAssignableFrom(field.getType()))
         {
             throw new RuntimeException("Only List can be sequence.");
@@ -118,6 +120,7 @@ public class RamlEmitter
 
     private void dumpSequenceItems(StringBuilder dump, int depth, List seq, Type itemType)
     {
+    	
         if (itemType instanceof ParameterizedType)
         {
             generateSequenceOfMaps(dump, depth + 1, seq, (ParameterizedType) itemType);
@@ -219,6 +222,7 @@ public class RamlEmitter
 
     private void dumpMappingField(StringBuilder dump, int depth, Field field, boolean implicit, Object pojo)
     {
+    	
         if (!Map.class.isAssignableFrom(field.getType()))
         {
             throw new RuntimeException("invalid type");
@@ -226,6 +230,7 @@ public class RamlEmitter
 
         Map value = (Map) getFieldValue(field, pojo);
 
+        
         if (value == null || value.isEmpty())
         {
             return;
@@ -239,6 +244,11 @@ public class RamlEmitter
 
         ParameterizedType pType = (ParameterizedType) field.getGenericType();
         Type valueType = pType.getActualTypeArguments()[1];
+        
+        if (alias(field).equals("settings"))
+    	{
+    		valueType = "".getClass();
+    	}
         dumpMap(dump, depth, valueType, value);
     }
 
@@ -271,7 +281,10 @@ public class RamlEmitter
             }
             else //scalar
             {
-                dump.append(sanitizeScalarValue(depth + 1, entry.getValue())).append("\n");
+            	if (value.containsKey("baseUri"))
+            		dump.append(sanitizeScalarValue(depth + 1, ((ArrayList)entry.getValue()).get(0))).append("\n");
+            	else
+            		dump.append(sanitizeScalarValue(depth + 1, entry.getValue())).append("\n");
             }
         }
 
@@ -281,6 +294,7 @@ public class RamlEmitter
     {
         try
         {
+        	
             Object value = field.get(pojo);
             if (value == null)
             {

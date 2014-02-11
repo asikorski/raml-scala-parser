@@ -53,7 +53,6 @@ public class DefaultTupleBuilder<K extends Node, V extends Node> implements Tupl
     @Override
     public NodeBuilder getBuilderForTuple(NodeTuple tuple)
     {
-    	
         if (builders == null || builders.isEmpty())
         {
             return new DefaultTupleBuilder(new DefaultTupleHandler());
@@ -66,6 +65,7 @@ public class DefaultTupleBuilder<K extends Node, V extends Node> implements Tupl
                 return tupleBuilder;
             }
         }
+        
         throw new RuntimeException("Builder not found for " + tuple);
     }
 
