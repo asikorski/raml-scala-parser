@@ -65,7 +65,7 @@ public class IncludeResolver implements TagResolver
             }
             ScalarNode scalarNode = (ScalarNode) node;
             String resourceName = scalarNode.getValue();
-            ValidationLogger.log("Current resource is" + resourceName);
+            ValidationLogger.log("Current resource is " + resourceName);
             inputStream = resourceLoader.fetchResource(resourceName);
             
             /** @FIXME CHANGED BY TOMEK G*/
