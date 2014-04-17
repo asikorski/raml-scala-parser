@@ -26,6 +26,7 @@ import org.apache.commons.io.IOUtils;
 import org.raml.parser.loader.FileResourceLoader;
 import org.raml.parser.loader.ResourceLoader;
 import org.raml.parser.visitor.NodeHandler;
+import org.raml.validation.ValidationLogger;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Node;
 import org.yaml.snakeyaml.nodes.ScalarNode;
@@ -64,7 +65,7 @@ public class IncludeResolver implements TagResolver
             }
             ScalarNode scalarNode = (ScalarNode) node;
             String resourceName = scalarNode.getValue();
-            
+            ValidationLogger.log("Current resource is" + resourceName);
             inputStream = resourceLoader.fetchResource(resourceName);
             
             /** @FIXME CHANGED BY TOMEK G*/
@@ -80,7 +81,9 @@ public class IncludeResolver implements TagResolver
             }
             else if (resourceName.endsWith(".raml") || resourceName.endsWith(".yaml") || resourceName.endsWith(".yml"))
             {
+
                 Yaml yamlParser = new Yaml();
+
                 includeNode = yamlParser.compose(new InputStreamReader(inputStream));
             }
             else //scalar value

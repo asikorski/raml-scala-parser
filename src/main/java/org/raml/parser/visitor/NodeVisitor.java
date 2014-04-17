@@ -69,6 +69,7 @@ public class NodeVisitor
 
     private void doVisitMappingNode(MappingNode mappingNode)
     {
+
         if (mappingNode.isMerged())
         {
             new MappingNodeMerger().merge(mappingNode);
@@ -77,6 +78,7 @@ public class NodeVisitor
         List<NodeTuple> updatedTuples = new ArrayList<NodeTuple>();
         for (NodeTuple nodeTuple : tuples)
         {
+
             Node keyNode = nodeTuple.getKeyNode();
             Node valueNode = nodeTuple.getValueNode();
             Node originalValueNode = valueNode;
@@ -111,6 +113,7 @@ public class NodeVisitor
 
     private TagResolver getTagResolver(Tag tag)
     {
+
         for (TagResolver resolver : tagResolvers)
         {
             if (resolver.handles(tag))
@@ -133,16 +136,21 @@ public class NodeVisitor
 
     private void visit(Node node, TupleType tupleType)
     {
+
         if (node.getNodeId() == NodeId.mapping)
         {
+//            System.out.println("Last node was " + node.getNodeId() + " with value " + ((MappingNode) node).getValue());
+
             visitMappingNode((MappingNode) node, tupleType);
         }
         else if (node.getNodeId() == NodeId.scalar)
         {
+//            System.out.println("Last node was " + node.getNodeId()+ " with value " + ((ScalarNode) node).getValue());
             visitScalar((ScalarNode) node, tupleType);
         }
         else if (node.getNodeId() == NodeId.sequence)
         {
+//            System.out.println("Last node was " + node.getNodeId() + " with value " + ((SequenceNode) node).getValue());
             visitSequence((SequenceNode) node, tupleType);
         }
     }
