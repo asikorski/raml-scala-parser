@@ -1,7 +1,5 @@
 name := "raml-scala-parser"
 
-scalaVersion := "2.11.0"
-
 version := "0.8"
 
 resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
