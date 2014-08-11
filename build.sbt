@@ -1,3 +1,5 @@
+lazy val main_raml = project.in(file("."))
+
 name := "raml-scala-parser"
 
 version := "0.8"
