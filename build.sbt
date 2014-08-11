@@ -1,7 +1,5 @@
 name := "raml-scala-parser"
 
-scalaVersion := "2.11.0"
-
 version := "0.8"
 
 resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
@@ -12,7 +10,7 @@ resolvers += "SnakeYAML repository" at "http://oss.sonatype.org/content/groups/p
 
 libraryDependencies ++= Seq(
   "junit" % "junit" % "4.11",
-  "org.slf4j" % "slf4j-simple" % "1.7.5",
+  "ch.qos.logback" % "logback-classic" % "1.0.13",
   "org.yaml" % "snakeyaml" % "1.13",
   "com.fasterxml.jackson.core" % "jackson-core" % "2.2.3",
   "com.fasterxml.jackson.core" % "jackson-annotations" % "2.2.3",
