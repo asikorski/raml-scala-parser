@@ -1,3 +1,7 @@
+logLevel in compile := Level.Warn
+
+scalacOptions += "-deprecation"
+
 lazy val main_raml = project.in(file("."))
 
 name := "raml-scala-parser"
@@ -12,7 +16,7 @@ resolvers += "SnakeYAML repository" at "http://oss.sonatype.org/content/groups/p
 
 libraryDependencies ++= Seq(
   "junit" % "junit" % "4.11",
-  "ch.qos.logback" % "logback-classic" % "1.0.13",
+  "ch.qos.logback" % "logback-classic" % "1.1.1",
   "org.yaml" % "snakeyaml" % "1.13",
   "com.fasterxml.jackson.core" % "jackson-core" % "2.2.3",
   "com.fasterxml.jackson.core" % "jackson-annotations" % "2.2.3",
